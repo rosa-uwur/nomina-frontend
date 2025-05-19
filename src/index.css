@@ -1,0 +1,78 @@
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Fuente general y fondo pastel suave */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #fefae0; /* beige pastel */
+  color: #333;
+  line-height: 1.6;
+  padding-top: 70px; /* espacio para el header fijo */
+}
+
+/* Estilo general para encabezados */
+h1, h2, h3 {
+  color: #4f4f4f;
+  margin-bottom: 1rem;
+}
+
+/* Estilo general para botones */
+button {
+  background-color: #a5d6a7; /* verde pastel */
+  color: #2e7d32;
+  border: none;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #81c784;
+}
+
+/* Estilo para tablas */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.05);
+}
+
+th, td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+th {
+  background-color: #f0f4c3; /* amarillo pastel */
+  color: #333;
+  font-weight: 600;
+}
+
+tr:hover {
+  background-color: #f9fbe7; /* verde claro pastel */
+}
+
+
+
+h2 {
+  color: #4a4a4a;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+  background-color: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
