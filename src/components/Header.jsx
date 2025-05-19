@@ -9,6 +9,7 @@ export default function Header() {
             <nav className="navbar-menu">
                 <Link to="/agregar-colaborador">Colaboradores</Link>
                 <Link to="/generar-pagos">Generar Pagos</Link>
+                <Link to="/prestaciones">Prestaciones</Link>
                 <Link to="/productividad">Productividad</Link>
                 <Link to="/reportes">Reportes</Link>
             </nav>

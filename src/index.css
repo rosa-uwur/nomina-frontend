@@ -76,3 +76,30 @@ table {
   background-color: white;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
+
+
+form input {
+  margin-right: 8px;
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+form button {
+  background-color: #aed581;
+  color: #33691e;
+  font-weight: bold;
+}
+
+table td button {
+  margin-right: 6px;
+  padding: 4px 8px;
+  background-color: #ffccbc;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+table td button:hover {
+  background-color: #ffab91;
+}
