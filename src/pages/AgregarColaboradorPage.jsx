@@ -166,7 +166,7 @@ const AgregarColaboradorPage = () => {
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{emp.nombre}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{emp.apellido}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{emp.puesto}</td>
-                <td style={{ border: '1px solid #ddd', padding: '8px' }}>${emp.salario_base}</td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>Q. {emp.salario_base}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{emp.fecha_ingreso}</td>
                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                   <button
