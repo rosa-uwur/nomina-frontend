@@ -1,83 +1,48 @@
+// GenerarPagosPage.js - Versión con hook personalizado
 import React, { useEffect, useState } from 'react';
 import * as XLSX from 'xlsx';
+import useNomina from './hooks/useNomina'; // Ajusta la ruta según tu estructura
 
 const GenerarPagosPage = () => {
     const [pagos, setPagos] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    // Configuración de la URL base de tu API
-    const API_BASE_URL = 'http://localhost:3000/api'; // Ajusta según tu configuración
+    const { 
+        loading, 
+        error, 
+        obtenerTodasNominas, 
+        obtenerNominasPorEmpleado,
+        insertarNomina,
+        clearError 
+    } = useNomina();
 
     useEffect(() => {
-        obtenerNominas();
+        cargarNominas();
     }, []);
 
-    const obtenerNominas = async () => {
+    const cargarNominas = async () => {
         try {
-            setLoading(true);
-            setError(null);
-            
-            const response = await fetch(`${API_BASE_URL}/nomina`);
-            
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-            }
-            
-            const data = await response.json();
+            const data = await obtenerTodasNominas();
             setPagos(data);
-        } catch (error) {
-            console.error('Error al obtener nóminas:', error);
-            setError('Error al cargar los datos de nómina');
-        } finally {
-            setLoading(false);
+        } catch (err) {
+            console.error('Error al cargar nóminas:', err);
         }
     };
 
-    const obtenerNominasPorEmpleado = async (idEmpleado) => {
+    const buscarPorEmpleado = async (idEmpleado) => {
         try {
-            setLoading(true);
-            setError(null);
-            
-            const response = await fetch(`${API_BASE_URL}/nomina/empleado/${idEmpleado}`);
-            
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-            }
-            
-            const data = await response.json();
+            const data = await obtenerNominasPorEmpleado(idEmpleado);
             setPagos(data);
-        } catch (error) {
-            console.error('Error al obtener nóminas por empleado:', error);
-            setError('Error al cargar los datos del empleado');
-        } finally {
-            setLoading(false);
+        } catch (err) {
+            console.error('Error al buscar por empleado:', err);
         }
     };
 
-    const insertarNuevaNomina = async (datosNomina) => {
+    const crearNuevaNomina = async (datos) => {
         try {
-            const response = await fetch(`${API_BASE_URL}/nomina`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(datosNomina)
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Error HTTP: ${response.status}`);
-            }
-            
-            const nuevaNomina = await response.json();
-            
-            // Actualizar la lista después de insertar
-            obtenerNominas();
-            
-            return nuevaNomina;
-        } catch (error) {
-            console.error('Error al insertar nómina:', error);
-            throw error;
+            await insertarNomina(datos);
+            // Recargar la lista después de insertar
+            await cargarNominas();
+        } catch (err) {
+            console.error('Error al crear nómina:', err);
         }
     };
 
@@ -90,7 +55,6 @@ const GenerarPagosPage = () => {
         const worksheet = XLSX.utils.json_to_sheet(pagos);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, 'Pagos');
-
         XLSX.writeFile(workbook, 'pagos_mensuales.xlsx');
     };
 
@@ -100,10 +64,10 @@ const GenerarPagosPage = () => {
     };
 
     const formatearMoneda = (cantidad) => {
-        if (!cantidad) return 'Q0.00';
+        if (!cantidad) return '$0.00';
         return new Intl.NumberFormat('es-ES', {
             style: 'currency',
-            currency: 'GTQ'
+            currency: 'USD'
         }).format(cantidad);
     };
 
@@ -118,8 +82,8 @@ const GenerarPagosPage = () => {
     if (error) {
         return (
             <div style={{ textAlign: 'center', padding: '20px', color: 'red' }}>
-                <p>{error}</p>
-                <button onClick={obtenerNominas} style={{ marginTop: '10px' }}>
+                <p>Error: {error}</p>
+                <button onClick={() => { clearError(); cargarNominas(); }}>
                     Reintentar
                 </button>
             </div>
@@ -134,7 +98,7 @@ const GenerarPagosPage = () => {
                 <button onClick={exportarExcel} style={{ marginRight: '10px' }}>
                     Exportar a Excel
                 </button>
-                <button onClick={obtenerNominas}>
+                <button onClick={cargarNominas}>
                     Actualizar Datos
                 </button>
             </div>
@@ -145,8 +109,6 @@ const GenerarPagosPage = () => {
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                         <tr style={{ backgroundColor: '#f5f5f5' }}>
-                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>ID Nómina</th>
-                            <th style={{ border: '1px solid #ddd', padding: '8px' }}>ID Empleado</th>
                             <th style={{ border: '1px solid #ddd', padding: '8px' }}>Colaborador</th>
                             <th style={{ border: '1px solid #ddd', padding: '8px' }}>Periodo</th>
                             <th style={{ border: '1px solid #ddd', padding: '8px' }}>Inicio</th>
@@ -160,10 +122,8 @@ const GenerarPagosPage = () => {
                     <tbody>
                         {pagos.map(pago => (
                             <tr key={pago.id_nomina}>
-                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{pago.id_nomina}</td>
-                                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{pago.id_empleado}</td>
                                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>
-                                    {pago.nombre_empleado || 'N/A'}
+                                    {pago.nombre_empleado || `Empleado ${pago.id_empleado}`}
                                 </td>
                                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>{pago.tipo_periodo}</td>
                                 <td style={{ border: '1px solid #ddd', padding: '8px' }}>

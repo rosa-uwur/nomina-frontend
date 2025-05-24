@@ -5,6 +5,8 @@ const AgregarColaboradorPage = () => {
   const [empleados, setEmpleados] = useState([]);
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [confirmarBajaId, setConfirmarBajaId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [nuevoEmpleado, setNuevoEmpleado] = useState({
     nombre: '',
     apellido: '',
@@ -15,47 +17,81 @@ const AgregarColaboradorPage = () => {
   });
 
   useEffect(() => {
-    const empleadosSimulados = [
-      {
-        id_empleado: 1,
-        nombre: 'Juan',
-        apellido: 'Pérez',
-        puesto: 'Analista',
-        salario_base: 5000,
-        fecha_ingreso: '2022-03-10',
-        estado: 'activo',
-      },
-    ];
-    setEmpleados(empleadosSimulados);
+    const fetchEmpleados = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get('http://localhost:3000/api/empleado');
+        setEmpleados(res.data);
+        setError(null);
+      } catch (err) {
+        console.error('Error al obtener empleados:', err);
+        setError('Error al cargar empleados: ' + err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEmpleados();
   }, []);
 
   const handleChange = (e) => {
     setNuevoEmpleado({ ...nuevoEmpleado, [e.target.name]: e.target.value });
   };
 
+  const fetchEmpleados = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get('http://localhost:3000/api/empleado');
+      setEmpleados(res.data);
+      setError(null);
+      console.log('Lista de empleados actualizada:', res.data); // Para debug
+    } catch (err) {
+      console.error('Error al obtener empleados:', err);
+      setError('Error al cargar empleados: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const nuevo = {
-      id_empleado: empleados.length + 1,
-      ...nuevoEmpleado
-    };
-
+    
     try {
-      // await axios.post('/api/empleados', nuevo);
-      setEmpleados([...empleados, nuevo]);
+      setLoading(true);
+      setError(null);
+      
+      // Validación básica
+      if (!nuevoEmpleado.nombre.trim() || !nuevoEmpleado.apellido.trim()) {
+        throw new Error('Nombre y apellido son requeridos');
+      }
+      
+      console.log('Enviando datos:', nuevoEmpleado); // Para debug
+      
+      const res = await axios.post('http://localhost:3000/api/empleado', nuevoEmpleado);
+      
+      console.log('Empleado agregado exitosamente:', res.data); // Para debug
+      
+      // Refrescar la lista completa desde el servidor
+      await fetchEmpleados();
+      
+      // Resetear formulario
+      setNuevoEmpleado({
+        nombre: '',
+        apellido: '',
+        puesto: '',
+        salario_base: '',
+        fecha_ingreso: '',
+        estado: 'activo'
+      });
+      
+      setMostrarFormulario(false);
+      
     } catch (error) {
-      console.error('Error al agregar colaborador', error);
+      console.error('Error al agregar colaborador:', error);
+      setError('Error al agregar colaborador: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
     }
-
-    setMostrarFormulario(false);
-    setNuevoEmpleado({
-      nombre: '',
-      apellido: '',
-      puesto: '',
-      salario_base: '',
-      fecha_ingreso: '',
-      estado: 'activo'
-    });
   };
 
   const confirmarBaja = (id) => {
@@ -67,15 +103,23 @@ const AgregarColaboradorPage = () => {
   };
 
   const darDeBaja = async () => {
-    const actualizado = empleados.map(emp =>
-      emp.id_empleado === confirmarBajaId ? { ...emp, estado: 'inactivo' } : emp
-    );
-
     try {
-      // await axios.put(`/api/empleados/${confirmarBajaId}/baja`);
+      setLoading(true);
+      setError(null);
+      
+      // Corregir la URL del endpoint - usar la misma base que para obtener empleados
+      await axios.patch(`http://localhost:3000/api/empleado/${confirmarBajaId}/baja`);
+      
+      const actualizado = empleados.map(emp =>
+        emp.id_empleado === confirmarBajaId ? { ...emp, estado: 'inactivo' } : emp
+      );
       setEmpleados(actualizado);
+      
     } catch (error) {
-      console.error('Error al dar de baja al colaborador', error);
+      console.error('Error al dar de baja al colaborador:', error);
+      setError('Error al dar de baja: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setLoading(false);
     }
 
     setConfirmarBajaId(null);
@@ -84,17 +128,34 @@ const AgregarColaboradorPage = () => {
   return (
     <div>
       <h2>Colaboradores Activos</h2>
-      <button onClick={() => setMostrarFormulario(true)}>+ Agregar Colaborador</button>
+      
+      {error && (
+        <div style={{ color: 'red', padding: '10px', margin: '10px 0', border: '1px solid red', borderRadius: '4px' }}>
+          {error}
+        </div>
+      )}
+      
+      <button 
+        onClick={() => {
+          console.log('Botón clickeado'); // Para debug
+          setMostrarFormulario(true);
+        }}
+        disabled={loading}
+      >
+        {loading ? 'Cargando...' : '+ Agregar Colaborador'}
+      </button>
 
-      <table>
+      {loading && <p>Cargando...</p>}
+
+      <table style={{ marginTop: '20px', width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            <th>Nombre</th>
-            <th>Apellido</th>
-            <th>Puesto</th>
-            <th>Salario Base</th>
-            <th>Fecha Ingreso</th>
-            <th>Acciones</th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Nombre</th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Apellido</th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Puesto</th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Salario Base</th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Fecha Ingreso</th>
+            <th style={{ border: '1px solid #ddd', padding: '8px' }}>Acciones</th>
           </tr>
         </thead>
         <tbody>
@@ -102,15 +163,16 @@ const AgregarColaboradorPage = () => {
             .filter(emp => emp.estado === 'activo')
             .map(emp => (
               <tr key={emp.id_empleado}>
-                <td>{emp.nombre}</td>
-                <td>{emp.apellido}</td>
-                <td>{emp.puesto}</td>
-                <td>${emp.salario_base}</td>
-                <td>{emp.fecha_ingreso}</td>
-                <td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{emp.nombre}</td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{emp.apellido}</td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{emp.puesto}</td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>${emp.salario_base}</td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>{emp.fecha_ingreso}</td>
+                <td style={{ border: '1px solid #ddd', padding: '8px' }}>
                   <button
                     style={{ backgroundColor: '#ef9a9a', color: '#b71c1c' }}
                     onClick={() => confirmarBaja(emp.id_empleado)}
+                    disabled={loading}
                   >
                     Dar de baja
                   </button>
@@ -125,14 +187,62 @@ const AgregarColaboradorPage = () => {
           <div style={styles.modal}>
             <h3>Nuevo Colaborador</h3>
             <form onSubmit={handleSubmit} style={styles.form}>
-              <input type="text" name="nombre" placeholder="Nombre" value={nuevoEmpleado.nombre} onChange={handleChange} required />
-              <input type="text" name="apellido" placeholder="Apellido" value={nuevoEmpleado.apellido} onChange={handleChange} required />
-              <input type="text" name="puesto" placeholder="Puesto" value={nuevoEmpleado.puesto} onChange={handleChange} required />
-              <input type="number" name="salario_base" placeholder="Salario Base" value={nuevoEmpleado.salario_base} onChange={handleChange} required />
-              <input type="date" name="fecha_ingreso" value={nuevoEmpleado.fecha_ingreso} onChange={handleChange} required />
+              <input 
+                type="text" 
+                name="nombre" 
+                placeholder="Nombre" 
+                value={nuevoEmpleado.nombre} 
+                onChange={handleChange} 
+                required 
+                disabled={loading}
+              />
+              <input 
+                type="text" 
+                name="apellido" 
+                placeholder="Apellido" 
+                value={nuevoEmpleado.apellido} 
+                onChange={handleChange} 
+                required 
+                disabled={loading}
+              />
+              <input 
+                type="text" 
+                name="puesto" 
+                placeholder="Puesto" 
+                value={nuevoEmpleado.puesto} 
+                onChange={handleChange} 
+                required 
+                disabled={loading}
+              />
+              <input 
+                type="number" 
+                name="salario_base" 
+                placeholder="Salario Base" 
+                value={nuevoEmpleado.salario_base} 
+                onChange={handleChange} 
+                required 
+                min="0"
+                step="0.01"
+                disabled={loading}
+              />
+              <input 
+                type="date" 
+                name="fecha_ingreso" 
+                value={nuevoEmpleado.fecha_ingreso} 
+                onChange={handleChange} 
+                required 
+                disabled={loading}
+              />
               <div style={{ marginTop: '1rem' }}>
-                <button type="submit">Guardar</button>
-                <button type="button" onClick={() => setMostrarFormulario(false)} style={{ marginLeft: '1rem', backgroundColor: '#ccc' }}>
+                <button type="submit" disabled={loading}>
+                  {loading ? 'Guardando...' : 'Guardar'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setMostrarFormulario(false)} 
+                  style={{ marginLeft: '1rem', backgroundColor: '#ccc' }}
+                  disabled={loading}
+                >
                   Cancelar
                 </button>
               </div>
@@ -147,8 +257,20 @@ const AgregarColaboradorPage = () => {
             <h3>Confirmar baja</h3>
             <p>¿Estás seguro que deseas dar de baja a este colaborador?</p>
             <div style={{ marginTop: '1rem' }}>
-              <button onClick={darDeBaja} style={{ backgroundColor: '#d32f2f', color: 'white' }}>Sí, dar de baja</button>
-              <button onClick={cancelarBaja} style={{ marginLeft: '1rem' }}>Cancelar</button>
+              <button 
+                onClick={darDeBaja} 
+                style={{ backgroundColor: '#d32f2f', color: 'white' }}
+                disabled={loading}
+              >
+                {loading ? 'Procesando...' : 'Sí, dar de baja'}
+              </button>
+              <button 
+                onClick={cancelarBaja} 
+                style={{ marginLeft: '1rem' }}
+                disabled={loading}
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         </div>
