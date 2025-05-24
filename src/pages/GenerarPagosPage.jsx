@@ -5,6 +5,7 @@ const GenerarPagosPage = () => {
     const [pagos, setPagos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [insertandoNomina, setInsertandoNomina] = useState(false);
 
     // Configuración de la URL base de tu API
     const API_BASE_URL = 'http://localhost:3000/api'; // Ajusta según tu configuración
@@ -18,7 +19,7 @@ const GenerarPagosPage = () => {
             setLoading(true);
             setError(null);
             
-            const response = await fetch(`${API_BASE_URL}/nomina`);
+            const response = await fetch(`${API_BASE_URL}/nomina/`);
             
             if (!response.ok) {
                 throw new Error(`Error HTTP: ${response.status}`);
@@ -81,6 +82,34 @@ const GenerarPagosPage = () => {
         }
     };
 
+    // Nueva función para llamar al endpoint insNomina
+    const insertarNominaEndpoint = async () => {
+        try {
+            setInsertandoNomina(true);
+            setError(null);
+            
+            const response = await fetch(`${API_BASE_URL}/nomina/insNomina`);
+            
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            
+            const resultado = await response.json();
+            console.log('Nómina insertada exitosamente:', resultado);
+            
+            // Actualizar la tabla después de la inserción
+            await obtenerNominas();
+            
+            alert('Nómina insertada exitosamente');
+        } catch (error) {
+            console.error('Error al insertar nómina:', error);
+            setError('Error al insertar la nómina');
+            alert('Error al insertar la nómina. Por favor, intenta de nuevo.');
+        } finally {
+            setInsertandoNomina(false);
+        }
+    };
+
     const exportarExcel = () => {
         if (pagos.length === 0) {
             alert('No hay datos para exportar');
@@ -131,6 +160,21 @@ const GenerarPagosPage = () => {
             <h2>Pagos a realizar este mes</h2>
 
             <div style={{ marginBottom: '20px' }}>
+                <button 
+                    onClick={insertarNominaEndpoint} 
+                    disabled={insertandoNomina}
+                    style={{ 
+                        marginRight: '10px',
+                        backgroundColor: insertandoNomina ? '#ccc' : '#4CAF50',
+                        color: 'white',
+                        border: 'none',
+                        padding: '8px 16px',
+                        cursor: insertandoNomina ? 'not-allowed' : 'pointer',
+                        borderRadius: '4px'
+                    }}
+                >
+                    {insertandoNomina ? 'Insertando...' : 'Insertar Nómina'}
+                </button>
                 <button onClick={exportarExcel} style={{ marginRight: '10px' }}>
                     Exportar a Excel
                 </button>

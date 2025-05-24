@@ -81,7 +81,8 @@ const AgregarColaboradorPage = () => {
         puesto: '',
         salario_base: '',
         fecha_ingreso: '',
-        estado: 'activo'
+        estado: 'activo',
+        tipo_periodo: 'Mensual'
       });
       
       setMostrarFormulario(false);
@@ -210,6 +211,15 @@ const AgregarColaboradorPage = () => {
                 name="puesto" 
                 placeholder="Puesto" 
                 value={nuevoEmpleado.puesto} 
+                onChange={handleChange} 
+                required 
+                disabled={loading}
+              />
+              <input 
+                type="text" 
+                name="tipo_periodo" 
+                placeholder="Tipo Periodo" 
+                value={nuevoEmpleado.tipo_periodo} 
                 onChange={handleChange} 
                 required 
                 disabled={loading}
